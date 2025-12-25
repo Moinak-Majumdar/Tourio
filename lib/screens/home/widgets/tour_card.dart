@@ -11,6 +11,7 @@ class TourCard extends StatelessWidget {
   final VoidCallback onExpenses;
   final VoidCallback onItinerary;
   final VoidCallback onNotes;
+  final VoidCallback onChecklist;
 
   const TourCard({
     super.key,
@@ -19,6 +20,7 @@ class TourCard extends StatelessWidget {
     required this.onExpenses,
     required this.onItinerary,
     required this.onNotes,
+    required this.onChecklist,
   });
 
   static const _defaultImages = [
@@ -135,8 +137,9 @@ class TourCard extends StatelessWidget {
     return Row(
       children: [
         _glassIcon(LucideIcons.edit3, onEdit),
-        _glassIcon(LucideIcons.wallet, onExpenses),
+        _glassIcon(LucideIcons.clipboardCheck, onChecklist),
         _glassIcon(LucideIcons.map, onItinerary),
+        _glassIcon(LucideIcons.wallet, onExpenses),
         _glassIcon(LucideIcons.fileText, onNotes),
       ],
     );

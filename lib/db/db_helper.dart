@@ -1,5 +1,5 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
@@ -72,7 +72,7 @@ class DatabaseHelper {
     tour_id INTEGER NOT NULL,
     title TEXT NOT NULL,
     amount REAL NOT NULL,
-    date TEXT NOT NULL,
+    expense_date TEXT NOT NULL,
     category TEXT NOT NULL,
     is_deleted INTEGER DEFAULT 0,
     created_at TEXT NOT NULL,

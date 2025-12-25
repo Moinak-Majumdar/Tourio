@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tourio/common/controllers/tour_controller.dart';
+import 'package:tourio/screens/checklist/checklist_screen.dart';
+import 'package:tourio/screens/expense/expense_screen.dart';
 import 'package:tourio/screens/home/widgets/tour_card.dart';
 import 'package:tourio/screens/itinerary/itinerary_view_screen.dart';
 import 'package:tourio/screens/tour/upsert_tour.dart';
@@ -31,10 +33,15 @@ class TourList extends StatelessWidget {
             onEdit: () => Get.to(() => UpsertTourScreen(tourId: tour.id!)),
             onExpenses: () {
               // Navigate to expenses page with tourId
+              Get.to(() => ExpenseScreen(tour: tour));
             },
             onItinerary: () => Get.to(() => ItineraryViewScreen(tour: tour)),
             onNotes: () {
               // Navigate to notes page with tourId
+            },
+            onChecklist: () {
+              // Navigate to checklist page with tourId
+              Get.to(() => ChecklistScreen(tour: tour));
             },
           );
         },

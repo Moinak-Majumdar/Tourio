@@ -29,6 +29,18 @@ class TourDb {
     }
   }
 
+  // upsert budget
+  static Future<void> upsertBudget(int tourId, double budget) async {
+    final db = await DatabaseHelper.instance.database;
+
+    await db.update(
+      table,
+      {'budget': budget},
+      where: 'id = ?',
+      whereArgs: [tourId],
+    );
+  }
+
   // ---------------- GET BY ID ----------------
   static Future<TourModel?> getTourById(int tourId) async {
     final db = await DatabaseHelper.instance.database;
