@@ -17,13 +17,33 @@ const expenseCategoryList = [
   'Emergency',
   'Other',
 ];
-
 const Map<String, ExpenseCategoryConfig> expenseCategoryMap = {
-  'Food': ExpenseCategoryConfig(icon: LucideIcons.utensils),
-  'Travel': ExpenseCategoryConfig(icon: LucideIcons.bus),
-  'Hotel': ExpenseCategoryConfig(icon: Icons.hotel),
-  'Shopping': ExpenseCategoryConfig(icon: LucideIcons.shoppingBag),
-  'Tickets': ExpenseCategoryConfig(icon: LucideIcons.ticket),
-  'Emergency': ExpenseCategoryConfig(icon: Icons.sos),
-  'Other': ExpenseCategoryConfig(icon: LucideIcons.moreHorizontal),
+  'Food': ExpenseCategoryConfig(
+    icon: LucideIcons.utensils,
+    color: Color(0xFFFFC94A),
+  ),
+
+  'Travel': ExpenseCategoryConfig(
+    icon: LucideIcons.bus,
+    color: Color(0xFF64B5F6),
+  ),
+
+  'Hotel': ExpenseCategoryConfig(icon: Icons.hotel, color: Color(0xFFB39DDB)),
+
+  'Shopping': ExpenseCategoryConfig(
+    icon: LucideIcons.shoppingBag,
+    color: Color(0xFFF06292),
+  ),
+
+  'Tickets': ExpenseCategoryConfig(
+    icon: LucideIcons.ticket,
+    color: Color(0xFF80CBC4),
+  ),
+
+  'Emergency': ExpenseCategoryConfig(icon: Icons.sos, color: Color(0xFFEF5350)),
+
+  'Other': ExpenseCategoryConfig(
+    icon: LucideIcons.moreHorizontal,
+    color: Color(0xFF90A4AE),
+  ),
 };

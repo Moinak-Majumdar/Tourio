@@ -53,3 +53,15 @@ class ExpenseModel {
     };
   }
 }
+
+class DailyExpenseSummary {
+  final DateTime date;
+  final double totalAmount;
+  final List<ExpenseModel> items;
+
+  DailyExpenseSummary({
+    required this.date,
+    required this.totalAmount,
+    required this.items,
+  });
+}

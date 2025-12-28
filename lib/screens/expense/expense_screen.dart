@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tourio/db/expense_db.dart';
 import 'package:tourio/models/expense_model.dart';
 import 'package:tourio/models/tour_model.dart';
+import 'package:tourio/screens/expense/expense_analytics.dart';
 import 'package:tourio/screens/expense/widget/budget_box.dart';
 import 'package:tourio/screens/expense/widget/category_config.dart';
 import 'package:tourio/screens/expense/widget/expense_upsert_sheet.dart';
@@ -42,21 +46,27 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.tour.name?.isNotEmpty == true
-              ? widget.tour.name!
-              : widget.tour.destination,
-        ),
+        title: Text(widget.tour.tourName),
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: scheme.surface,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.trending_up),
+            onPressed: () => {
+              Get.to(
+                () =>
+                    ExpenseAnalyticsScreen(tour: widget.tour, expenses: _items),
+              ),
+            },
+          ),
           IconButton(
             icon: const Icon(LucideIcons.filter),
             onPressed: _openFilter,
           ),
         ],
       ),
+      resizeToAvoidBottomInset: false,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openAddExpense,
         icon: const Icon(LucideIcons.plus),
@@ -130,6 +140,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.only(bottom: 14),
         decoration: BoxDecoration(
           color: scheme.error,
           borderRadius: BorderRadius.circular(18),
@@ -162,7 +173,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      item.category,
+                      DateFormat('EEE, d MMM yyyy').format(item.expenseDate),
                       style: TextStyle(fontSize: 12, color: scheme.outline),
                     ),
                   ],
@@ -198,10 +209,10 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        color: scheme.primaryContainer.withValues(alpha: 0.9),
+        color: config.color,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Icon(config.icon, size: 20, color: scheme.onPrimaryContainer),
+      child: Icon(config.icon, size: 20),
     );
   }
 
@@ -210,6 +221,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   Future<void> _openAddExpense() async {
     final created = await showModalBottomSheet<bool>(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => ExpenseUpsertSheet(tourId: widget.tour.id!),
@@ -224,6 +236,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     final updated = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) =>
           ExpenseUpsertSheet(tourId: widget.tour.id!, existing: item),

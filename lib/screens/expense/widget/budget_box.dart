@@ -100,8 +100,9 @@ class _BudgetBoxState extends State<BudgetBox> {
               child: LinearProgressIndicator(
                 value: progress.clamp(0.0, 1.0),
                 minHeight: 8,
-                backgroundColor: scheme.surface,
-                valueColor: AlwaysStoppedAnimation(ui.accent),
+                backgroundColor: scheme.surfaceContainerHighest,
+                valueColor: AlwaysStoppedAnimation(ui.color),
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
         ],

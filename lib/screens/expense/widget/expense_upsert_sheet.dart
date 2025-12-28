@@ -73,137 +73,148 @@ class _ExpenseUpsertSheetState extends State<ExpenseUpsertSheet> {
         ),
         child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // -------- Header --------
-              Row(
+          child: Scrollbar(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: scheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      isEdit ? LucideIcons.edit3 : LucideIcons.plus,
-                      color: scheme.onPrimaryContainer,
-                      size: 20,
+                  // -------- Header --------
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: scheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(
+                          isEdit ? LucideIcons.edit3 : LucideIcons.plus,
+                          color: scheme.onPrimaryContainer,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        isEdit ? 'Edit expense' : 'Add expense',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  // -------- Date --------
+                  Row(
+                    children: [
+                      Icon(
+                        LucideIcons.calendar,
+                        size: 18,
+                        color: scheme.outline,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        DateFormat('EEE, d MMM yyyy').format(_expenseDate),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: _pickDate,
+                        child: const Text('Change'),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // -------- Title --------
+                  TextFormField(
+                    controller: _titleCtrl,
+                    focusNode: _titleFocus,
+                    textCapitalization: TextCapitalization.sentences,
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? 'Title required' : null,
+                    decoration: InputDecoration(
+                      hintText: 'Expense title',
+                      filled: true,
+                      fillColor: scheme.surfaceContainerLow,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    isEdit ? 'Edit expense' : 'Add expense',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
+
+                  const SizedBox(height: 14),
+
+                  // -------- Amount --------
+                  TextFormField(
+                    controller: _amountCtrl,
+                    keyboardType: TextInputType.number,
+                    validator: (v) {
+                      final val = double.tryParse(v ?? '');
+                      if (val == null || val <= 0) {
+                        return 'Enter valid amount';
+                      }
+                      return null;
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Amount',
+                      filled: true,
+                      fillColor: scheme.surfaceContainerLow,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // -------- Category --------
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 0,
+                    children: expenseCategoryList.map((c) {
+                      final selected = c == _category;
+                      return ChoiceChip(
+                        label: Text(c),
+                        selected: selected,
+                        onSelected: (_) => setState(() => _category = c),
+                        selectedColor: scheme.primaryContainer,
+                        backgroundColor: scheme.surfaceContainerLow,
+                        labelStyle: TextStyle(
+                          color: selected
+                              ? scheme.onPrimaryContainer
+                              : scheme.onSurface,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // -------- Action --------
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      icon: const Icon(LucideIcons.check),
+                      label: Text(isEdit ? 'Update expense' : 'Add expense'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      onPressed: _save,
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 18),
-
-              // -------- Date --------
-              Row(
-                children: [
-                  Icon(LucideIcons.calendar, size: 18, color: scheme.outline),
-                  const SizedBox(width: 8),
-                  Text(
-                    DateFormat('EEE, d MMM yyyy').format(_expenseDate),
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  const Spacer(),
-                  TextButton(onPressed: _pickDate, child: const Text('Change')),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // -------- Title --------
-              TextFormField(
-                controller: _titleCtrl,
-                focusNode: _titleFocus,
-                textCapitalization: TextCapitalization.sentences,
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Title required' : null,
-                decoration: InputDecoration(
-                  hintText: 'Expense title',
-                  filled: true,
-                  fillColor: scheme.surfaceContainerLow,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              // -------- Amount --------
-              TextFormField(
-                controller: _amountCtrl,
-                keyboardType: TextInputType.number,
-                validator: (v) {
-                  final val = double.tryParse(v ?? '');
-                  if (val == null || val <= 0) {
-                    return 'Enter valid amount';
-                  }
-                  return null;
-                },
-                decoration: InputDecoration(
-                  hintText: 'Amount',
-                  filled: true,
-                  fillColor: scheme.surfaceContainerLow,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // -------- Category --------
-              Wrap(
-                spacing: 8,
-                runSpacing: 0,
-                children: expenseCategoryList.map((c) {
-                  final selected = c == _category;
-                  return ChoiceChip(
-                    label: Text(c),
-                    selected: selected,
-                    onSelected: (_) => setState(() => _category = c),
-                    selectedColor: scheme.primaryContainer,
-                    backgroundColor: scheme.surfaceContainerLow,
-                    labelStyle: TextStyle(
-                      color: selected
-                          ? scheme.onPrimaryContainer
-                          : scheme.onSurface,
-                    ),
-                  );
-                }).toList(),
-              ),
-
-              const SizedBox(height: 24),
-
-              // -------- Action --------
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  icon: const Icon(LucideIcons.check),
-                  label: Text(isEdit ? 'Update expense' : 'Add expense'),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  onPressed: _save,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
