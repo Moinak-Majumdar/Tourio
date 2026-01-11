@@ -1,7 +1,6 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tourio/models/expense_model.dart';
 import 'package:tourio/models/tour_model.dart';
 import 'package:tourio/screens/expense/widget/category_config.dart';
@@ -26,7 +25,8 @@ class _DailySnapshotCardState extends State<DailySnapshotCard> {
   @override
   void initState() {
     super.initState();
-    _index = _initialIndex(widget.summaries);
+    final i = _initialIndex(widget.summaries);
+    _index = i;
   }
 
   @override
@@ -37,7 +37,7 @@ class _DailySnapshotCardState extends State<DailySnapshotCard> {
     final prev = _index > 0 ? widget.summaries[_index - 1] : null;
 
     final spent = day.totalAmount;
-    final diff = prev == null ? null : spent - prev.totalAmount;
+    final diffFromLastDay = prev == null ? null : spent - prev.totalAmount;
 
     ExpenseModel? mostExpensive;
 
@@ -49,11 +49,9 @@ class _DailySnapshotCardState extends State<DailySnapshotCard> {
 
     final budgetPerDay = widget.tour.budget != null
         ? widget.tour.budget! / widget.tour.totalDays
-        : 0;
+        : 0.0;
 
-    final progress = budgetPerDay != 0 ? spent / budgetPerDay : 0.toDouble();
-
-    final daySpentDiff = budgetPerDay != 0 ? (budgetPerDay - spent) : null;
+    final progress = budgetPerDay != 0 ? spent / budgetPerDay : 0.0;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -67,24 +65,13 @@ class _DailySnapshotCardState extends State<DailySnapshotCard> {
           // ---------------- Header ----------------
           Row(
             children: [
-              if (daySpentDiff != null)
-                Text(
-                  daySpentDiff >= 0
-                      ? 'Rs.${daySpentDiff.toStringAsFixed(0)} remaining'
-                      : 'Rs.${daySpentDiff.abs().toStringAsFixed(0)} over spent',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: daySpentDiff >= 0 ? Colors.green : Colors.red,
-                  ),
-                ),
-              if (daySpentDiff == null)
-                Text(
-                  'Daily report',
-                  style: TextStyle(
-                    color: scheme.outline,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+              _DailySpendStatus(
+                spent: spent,
+                budgetPerDay: budgetPerDay,
+                day: day.date,
+                progress: progress,
+                diff: (budgetPerDay - spent).abs().toStringAsFixed(0),
+              ),
               const Spacer(),
               _daySwitcher(scheme),
             ],
@@ -113,26 +100,26 @@ class _DailySnapshotCardState extends State<DailySnapshotCard> {
                       'No spending this day',
                       style: TextStyle(color: scheme.outline),
                     )
-                  else if (diff != null)
+                  else if (diffFromLastDay != null)
                     Row(
                       children: [
                         Icon(
-                          diff >= 0
+                          diffFromLastDay >= 0
                               ? Icons.trending_up_rounded
                               : Icons.trending_down_rounded,
                           size: 18,
-                          color: diff >= 0
+                          color: diffFromLastDay >= 0
                               ? Colors.redAccent
                               : Colors.greenAccent,
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          diff >= 0
-                              ? '+₹${diff.toStringAsFixed(0)} vs yesterday'
-                              : '-₹${diff.abs().toStringAsFixed(0)} vs yesterday',
+                          diffFromLastDay >= 0
+                              ? '+ ₹${diffFromLastDay.toStringAsFixed(0)} vs yesterday'
+                              : '- ₹${diffFromLastDay.abs().toStringAsFixed(0)} vs yesterday',
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            color: diff >= 0
+                            color: diffFromLastDay >= 0
                                 ? Colors.redAccent
                                 : Colors.greenAccent,
                           ),
@@ -148,6 +135,15 @@ class _DailySnapshotCardState extends State<DailySnapshotCard> {
                   color: Colors.red,
                   size: 120,
                   stroke: 12,
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(0.0, 0.0, 24.0, 0.0),
+                  child: Icon(
+                    Icons.self_improvement_rounded,
+                    size: 100,
+                    color: scheme.secondary,
+                  ),
                 ),
             ],
           ),
@@ -163,14 +159,17 @@ class _DailySnapshotCardState extends State<DailySnapshotCard> {
               child: Row(
                 children: [
                   Icon(
-                    expenseCategoryMap[mostExpensive.category]!.icon,
+                    expenseCategoryMap[mostExpensive.category]?.icon ??
+                        LucideIcons.moreHorizontal,
                     size: 24,
-                    color: expenseCategoryMap[mostExpensive.category]!.color,
+                    color:
+                        expenseCategoryMap[mostExpensive.category]?.color ??
+                        Color(0xFF90A4AE),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Most spent: ${mostExpensive!.title}  - ₹${mostExpensive.amount.toStringAsFixed(0)}',
+                      'Most spent: ${mostExpensive.title}  - ₹${mostExpensive.amount.toStringAsFixed(0)}',
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -238,6 +237,132 @@ int _initialIndex(List<DailyExpenseSummary> data) {
 
 bool _sameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
+
+enum _DayKind { past, today, future }
+
+class _Status {
+  final String text;
+  final Color color;
+  final IconData icon;
+
+  const _Status({required this.text, required this.color, required this.icon});
+}
+
+class _DailySpendStatus extends StatelessWidget {
+  final double spent;
+  final double budgetPerDay;
+  final DateTime day;
+  final double progress;
+  final String diff;
+
+  const _DailySpendStatus({
+    required this.spent,
+    required this.budgetPerDay,
+    required this.day,
+    required this.progress,
+    required this.diff,
+  });
+
+  _DayKind _classifyDay(DateTime d) {
+    final now = DateTime.now();
+    if (_sameDay(d, now)) return _DayKind.today;
+    if (d.isBefore(now)) return _DayKind.past;
+    return _DayKind.future;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    final status = _resolveStatus(scheme);
+
+    return SizedBox(
+      width: 150,
+      child: Row(
+        children: [
+          Icon(status.icon, size: 30, color: status.color),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              status.text,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: status.color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  _Status _resolveStatus(ColorScheme scheme) {
+    final kind = _classifyDay(day);
+
+    if (budgetPerDay <= 0) {
+      return _Status(
+        text: kind == _DayKind.today ? 'No daily budget set' : 'Daily snapshot',
+        color: scheme.outline,
+        icon: Icons.insights_rounded,
+      );
+    }
+
+    if (spent == 0) {
+      if (kind == _DayKind.future) {
+        return _Status(
+          text: 'Planned day',
+          color: scheme.outline,
+          icon: Icons.schedule,
+        );
+      }
+      return _Status(
+        text: kind == _DayKind.today ? 'No spending yet' : 'No spending',
+        color: scheme.outline,
+        icon: Icons.self_improvement_rounded,
+      );
+    }
+
+    // 🟢 UNDER BUDGET
+    if (progress < 0.9) {
+      return _Status(
+        text: kind == _DayKind.today
+            ? '₹$diff available today'
+            : 'Under budget by ₹$diff',
+        color: const Color(0xff2ECC71),
+        icon: Icons.verified_rounded,
+      );
+    }
+
+    // 🟡 ON TRACK
+    if (progress <= 1.0) {
+      return _Status(
+        text: kind == _DayKind.today ? 'Right on track' : 'On budget',
+        color: scheme.primary,
+        icon: LucideIcons.checkCircle,
+      );
+    }
+
+    // 🟠 WARNING
+    if (progress <= 1.1) {
+      return _Status(
+        text: kind == _DayKind.today
+            ? 'Almost out of today’s budget'
+            : 'Slightly over budget',
+        color: const Color(0xffF39C12),
+        icon: Icons.warning,
+      );
+    }
+
+    // 🔴 DANGER
+    return _Status(
+      text: kind == _DayKind.today
+          ? 'Over limit by ₹$diff'
+          : 'Exceeded budget by ₹$diff',
+      color: const Color(0xffE74C3C),
+      icon: Icons.error,
+    );
+  }
+}
 
 class _ArcGauge extends StatelessWidget {
   final double progress; // 0.0 → 1.0
@@ -315,7 +440,11 @@ class _ArcGaugePainter extends CustomPainter {
 
     final valuePaint = Paint()
       ..shader = LinearGradient(
-        colors: [const Color(0xfff89b29), const Color(0xffff0f7b)],
+        colors: [
+          const Color(0xff40E0D0),
+          const Color(0xffFF8C00),
+          const Color(0xffFF0080),
+        ],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke

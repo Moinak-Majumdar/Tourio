@@ -10,8 +10,13 @@ import 'package:tourio/screens/expense/widget/category_config.dart';
 
 class ExpenseCategoryPie extends StatefulWidget {
   final List<ExpenseModel> expenses;
+  final double totalSpent;
 
-  const ExpenseCategoryPie({super.key, required this.expenses});
+  const ExpenseCategoryPie({
+    super.key,
+    required this.expenses,
+    required this.totalSpent,
+  });
 
   @override
   State<ExpenseCategoryPie> createState() => _ExpenseCategoryPieState();
@@ -30,15 +35,13 @@ class _ExpenseCategoryPieState extends State<ExpenseCategoryPie> {
       return const SizedBox();
     }
 
-    final totals = <String, double>{};
+    final catAmtMap = <String, double>{};
     for (final e in widget.expenses) {
-      totals[e.category] = (totals[e.category] ?? 0) + e.amount;
+      catAmtMap[e.category] = (catAmtMap[e.category] ?? 0) + e.amount;
     }
 
-    final entries = totals.entries.toList()
+    final entries = catAmtMap.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-
-    final total = entries.fold<double>(0, (s, e) => s + e.value);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -59,31 +62,54 @@ class _ExpenseCategoryPieState extends State<ExpenseCategoryPie> {
             ],
           ),
           const SizedBox(height: 20),
-          SizedBox(
-            height: 260,
-            child: Obx(
-              () => PieChart(
-                PieChartData(
-                  startDegreeOffset: -90,
-                  sectionsSpace: 4,
-                  centerSpaceRadius: 50,
-                  pieTouchData: PieTouchData(
-                    touchCallback: (event, response) {
-                      setState(() {
-                        _touchedIndex =
-                            response?.touchedSection?.touchedSectionIndex ?? -1;
-                      });
-                    },
-                  ),
-                  sections: _buildSections(
-                    entries,
-                    total,
-                    scheme,
-                    tc.isDark.value,
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              if (_touchedIndex != -1)
+                Column(
+                  children: [
+                    Text(
+                      entries[_touchedIndex].key,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: scheme.primary,
+                      ),
+                    ),
+                    Text(
+                      entries[_touchedIndex].value.toString(),
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  ],
+                ),
+              SizedBox(
+                height: 260,
+                child: Obx(
+                  () => PieChart(
+                    PieChartData(
+                      startDegreeOffset: -90,
+                      sectionsSpace: 4,
+                      centerSpaceRadius: 50,
+                      pieTouchData: PieTouchData(
+                        touchCallback: (event, response) {
+                          setState(() {
+                            _touchedIndex =
+                                response?.touchedSection?.touchedSectionIndex ??
+                                -1;
+                          });
+                        },
+                      ),
+                      sections: _buildSections(
+                        entries,
+                        widget.totalSpent,
+                        scheme,
+                        tc.isDark.value,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
         ],
       ),

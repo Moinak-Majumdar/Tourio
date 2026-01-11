@@ -1,31 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:tourio/models/tour_model.dart';
 
 enum BudgetHealth { healthy, warning, over, none }
 
 class BudgetSnapshotCard extends StatelessWidget {
-  final double? budget;
   final double spent;
-  final int totalDays;
+  final TourModel tour;
+  final int spentDays;
   final VoidCallback onEditBudget;
 
   const BudgetSnapshotCard({
     super.key,
-    required this.budget,
     required this.spent,
-    required this.totalDays,
+    required this.tour,
+    required this.spentDays,
     required this.onEditBudget,
   });
 
   @override
   Widget build(BuildContext context) {
+    final double budget = tour.budget ?? 0.0;
+    final int totalDays = tour.totalDays;
     final scheme = Theme.of(context).colorScheme;
 
-    final remaining = budget != null ? (budget! - spent) : null;
-
-    final isOverSpent = remaining != null && remaining < 0;
-
-    final avgPerDay = totalDays > 0 ? (spent / totalDays) : 0.0;
+    final allocationPerDay = totalDays > 0 ? (budget / totalDays) : 0.0;
+    final spentPerDay = spentDays > 0 ? (spent / spentDays) : 0.0;
+    final remaining = (allocationPerDay - spentPerDay);
+    final isOverSpent = remaining < 0;
 
     final health = _health(budget, spent);
 
@@ -49,7 +51,7 @@ class BudgetSnapshotCard extends StatelessWidget {
               Expanded(
                 child: _metric(
                   label: 'Budget',
-                  value: budget != null ? _money(budget!) : 'Not set',
+                  value: _money(budget),
                   color: scheme.primary,
                 ),
               ),
@@ -63,7 +65,7 @@ class BudgetSnapshotCard extends StatelessWidget {
               Expanded(
                 child: _metric(
                   label: isOverSpent ? 'Over Spent' : 'Remaining',
-                  value: remaining != null ? _money(remaining) : '—',
+                  value: _money(budget - spent),
                   color: isOverSpent ? scheme.error : scheme.primary,
                 ),
               ),
@@ -75,12 +77,24 @@ class BudgetSnapshotCard extends StatelessWidget {
           // ---------- Avg per day ----------
           Row(
             children: [
-              Icon(LucideIcons.trendingUp, size: 20, color: scheme.secondary),
-              const SizedBox(width: 8),
               Text(
-                'Avg: ${_money(avgPerDay)}/day.',
+                'Limit: ${_money(allocationPerDay)}/day.',
                 style: TextStyle(
+                  fontSize: 12,
                   color: scheme.secondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                'Avg spent: ',
+                style: TextStyle(fontSize: 12, color: scheme.secondary),
+              ),
+              Text(
+                '₹${spentPerDay.toStringAsFixed(2)}/day',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isOverSpent ? Colors.red : Colors.green,
                   fontWeight: FontWeight.w500,
                 ),
               ),

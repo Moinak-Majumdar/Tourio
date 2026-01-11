@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tourio/common/controllers/tour_controller.dart';
 import 'package:tourio/screens/checklist/checklist_screen.dart';
+import 'package:tourio/screens/expense/expense_screen.dart';
 import 'package:tourio/screens/home/widgets/tour_select_dialog.dart';
 import 'package:tourio/screens/itinerary/itinerary_view_screen.dart';
 import 'package:tourio/screens/settings/settings_screen.dart';
@@ -80,13 +81,26 @@ class HomeDrawer extends StatelessWidget {
                 _drawerItem(
                   icon: LucideIcons.wallet2,
                   title: 'Expenses',
-                  onTap: () => {
-                    TourSelectDialog.open(context, action: TourAction.expenses),
+                  onTap: () {
+                    final ot = tc.ongoingTour;
+                    if (ot != null) {
+                      Get.to(() => ExpenseScreen(tour: ot));
+                    } else {
+                      TourSelectDialog.open(
+                        context,
+                        action: TourAction.expenses,
+                      );
+                    }
                   },
                 ),
               ],
               const SizedBox(height: 16),
-              _drawerSection('Preferences'),
+              _drawerSection('Actions'),
+              _drawerItem(
+                icon: LucideIcons.trash,
+                title: 'Trash',
+                onTap: () => {},
+              ),
               _drawerItem(
                 icon: LucideIcons.settings,
                 title: 'Settings',

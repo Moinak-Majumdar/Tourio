@@ -1,9 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:tourio/common/controllers/tour_controller.dart';
-import 'package:tourio/common/theme/dark_theme.dart';
-import 'package:tourio/common/theme/light_theme.dart';
+import 'package:tourio/common/theme/app_theme.dart';
 import 'package:tourio/screens/home/home_screen.dart';
 
 import 'common/controllers/theme_controller.dart';
@@ -29,9 +29,7 @@ class TourioApp extends StatelessWidget {
       return GetMaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Tourio',
-        theme: themeController.isDark.value
-            ? DarkTheme.theme
-            : LightTheme.theme,
+        theme: themeController.isDark.value ? AppTheme.dark : AppTheme.light,
         home: const HomeScreen(),
       );
     });

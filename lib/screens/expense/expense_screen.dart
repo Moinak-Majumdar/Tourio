@@ -8,8 +8,9 @@ import 'package:tourio/db/expense_db.dart';
 import 'package:tourio/models/expense_model.dart';
 import 'package:tourio/models/tour_model.dart';
 import 'package:tourio/screens/expense/expense_analytics.dart';
-import 'package:tourio/screens/expense/widget/budget_box.dart';
 import 'package:tourio/screens/expense/widget/category_config.dart';
+import 'package:tourio/screens/expense/widget/expense_filter.dart';
+import 'package:tourio/screens/expense/widget/expense_overview.dart';
 import 'package:tourio/screens/expense/widget/expense_upsert_sheet.dart';
 
 class ExpenseScreen extends StatefulWidget {
@@ -23,6 +24,8 @@ class ExpenseScreen extends StatefulWidget {
 
 class _ExpenseScreenState extends State<ExpenseScreen> {
   List<ExpenseModel> _items = [];
+  List<ExpenseModel> _filteredItems = [];
+  ExpenseFilterState? _filter;
 
   double get totalSpent => _items.fold(0, (sum, e) => sum + e.amount);
 
@@ -34,9 +37,13 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
   Future<void> _loadExpenses() async {
     final items = await ExpenseDb.getByTour(widget.tour.id!);
+    final minAmount = _minExpenseAmount(items);
+    final maxAmount = _maxExpenseAmount(items);
 
     setState(() {
+      _filter = ExpenseFilterState(minAmount: minAmount, maxAmount: maxAmount);
       _items = items;
+      _filteredItems = items;
     });
   }
 
@@ -60,35 +67,23 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
               ),
             },
           ),
-          IconButton(
-            icon: const Icon(LucideIcons.filter),
-            onPressed: _openFilter,
-          ),
         ],
       ),
       resizeToAvoidBottomInset: false,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openAddExpense,
-        icon: const Icon(LucideIcons.plus),
-        label: const Text('Add expense'),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _onAddExpense,
+
+        child: const Icon(LucideIcons.plus),
       ),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-        child: Column(
-          children: [
-            BudgetBox(
-              tour: widget.tour,
-              totalSpent: totalSpent,
-              onBudgetUpdated: (value) {
-                setState(() {
-                  widget.tour.budget = value;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            Expanded(child: _expenseListBox(scheme)),
-          ],
-        ),
+      body: Column(
+        children: [
+          ExpenseOverview(used: totalSpent, limit: widget.tour.budget!),
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: SizedBox(height: 48, child: filterMenu()),
+          ),
+          Expanded(child: _expenseListBox(scheme)),
+        ],
       ),
     );
   }
@@ -96,12 +91,8 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   // ---------------- Expense List ----------------
 
   Widget _expenseListBox(ColorScheme scheme) {
-    if (_items.isEmpty) {
+    if (_filteredItems.isEmpty) {
       return Container(
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(24),
-        ),
         margin: const EdgeInsets.only(bottom: 8),
         child: Center(
           child: const Column(
@@ -117,15 +108,11 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(24),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       margin: EdgeInsets.only(bottom: 8),
       child: ListView.builder(
-        itemCount: _items.length,
-        itemBuilder: (_, i) => _expenseTile(_items[i], scheme),
+        itemCount: _filteredItems.length,
+        itemBuilder: (_, i) => _expenseTile(_filteredItems[i], scheme),
       ),
     );
   }
@@ -133,10 +120,12 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   // ---------------- Expense Tile ----------------
 
   Widget _expenseTile(ExpenseModel item, ColorScheme scheme) {
+    final amount = item.amount.toStringAsFixed(2);
+
     return Dismissible(
       key: ValueKey(item.id),
       direction: DismissDirection.endToStart,
-      onDismissed: (_) => _delete(item),
+      onDismissed: (_) => _onDeleteExpense(item),
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
@@ -150,13 +139,13 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       child: GestureDetector(
         onLongPress: () {
           HapticFeedback.mediumImpact();
-          _edit(item);
+          _onEditExpense(item);
         },
         child: Container(
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: scheme.surface,
+            color: scheme.surfaceContainer,
             borderRadius: BorderRadius.circular(18),
           ),
           child: Row(
@@ -180,18 +169,33 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                 ),
               ),
               Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    '₹${item.amount.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        '₹${amount.split('.').first}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      if (amount.split('.').last != '00') ...[
+                        Text('.', style: TextStyle(color: scheme.outline)),
+                        Text(
+                          amount.split('.').last,
+                          style: TextStyle(
+                            color: scheme.outline,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   IconButton(
                     icon: const Icon(LucideIcons.edit3, size: 18),
-                    onPressed: () => _edit(item),
+                    onPressed: () => _onEditExpense(item),
                   ),
                 ],
               ),
@@ -218,7 +222,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
   // ---------------- Actions ----------------
 
-  Future<void> _openAddExpense() async {
+  Future<void> _onAddExpense() async {
     final created = await showModalBottomSheet<bool>(
       context: context,
       useSafeArea: true,
@@ -232,7 +236,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     }
   }
 
-  Future<void> _edit(ExpenseModel item) async {
+  Future<void> _onEditExpense(ExpenseModel item) async {
     final updated = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -247,10 +251,116 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     }
   }
 
-  Future<void> _delete(ExpenseModel item) async {
+  Future<void> _onDeleteExpense(ExpenseModel item) async {
     await ExpenseDb.softDelete(item.id!);
     _loadExpenses();
   }
 
-  void _openFilter() {}
+  // ---------------- Filter ----------------
+  double _minExpenseAmount(List<ExpenseModel> items) => items.isEmpty
+      ? 0
+      : items.map((e) => e.amount).reduce((a, b) => a < b ? a : b);
+
+  double _maxExpenseAmount(List<ExpenseModel> items) => items.isEmpty
+      ? 0
+      : items.map((e) => e.amount).reduce((a, b) => a > b ? a : b);
+
+  Widget filterMenu() {
+    return ListView(
+      scrollDirection: Axis.horizontal,
+      children: [
+        FilledButton.icon(
+          label: Text('Amt: High to Low'),
+          icon: const Icon(Icons.sort),
+          onPressed: () {
+            final t = _items;
+            t.sort((a, b) => b.amount.compareTo(a.amount));
+            setState(() {
+              _filteredItems = t;
+            });
+          },
+        ),
+        const SizedBox(width: 8),
+        FilledButton.icon(
+          label: Text('Date: Newest'),
+          icon: const Icon(LucideIcons.calendar),
+          onPressed: () {
+            final t = _items;
+            t.sort((a, b) => b.expenseDate.compareTo(a.expenseDate));
+            setState(() {
+              _filteredItems = t;
+            });
+          },
+        ),
+        const SizedBox(width: 8),
+        if (_filter != null)
+          FilledButton.icon(
+            label: Text('Others'),
+            icon: const Icon(Icons.tune),
+            onPressed: () async {
+              final result = await showModalBottomSheet<ExpenseFilterState>(
+                context: context,
+                isScrollControlled: true,
+                useSafeArea: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => ExpenseFilterSheet(
+                  initial: _filter!,
+                  maxAmtSpent: _maxExpenseAmount(_items),
+                  onReset: () => {
+                    setState(() {
+                      _filter = ExpenseFilterState(
+                        maxAmount: _maxExpenseAmount(_items),
+                        minAmount: _minExpenseAmount(_items),
+                      );
+                      _filteredItems = _items;
+                    }),
+                  },
+                ),
+              );
+              if (result != null) {
+                setState(() {
+                  _filter = result;
+                  _filteredItems = _applyExpenseFilter(_items, result);
+                });
+              }
+            },
+          ),
+      ],
+    );
+  }
+}
+
+List<ExpenseModel> _applyExpenseFilter(
+  List<ExpenseModel> items,
+  ExpenseFilterState filter,
+) {
+  var list = items.where((e) {
+    if (e.amount < filter.minAmount || e.amount > filter.maxAmount) {
+      return false;
+    }
+    if (filter.categories.isNotEmpty &&
+        !filter.categories.contains(e.category)) {
+      return false;
+    }
+    return true;
+  }).toList();
+
+  switch (filter.sort) {
+    case ExpenseSort.amountHighToLow:
+      list.sort((a, b) => b.amount.compareTo(a.amount));
+      break;
+    case ExpenseSort.amountLowToHigh:
+      list.sort((a, b) => a.amount.compareTo(b.amount));
+      break;
+    case ExpenseSort.dateNewest:
+      list.sort((a, b) => b.expenseDate.compareTo(a.expenseDate));
+      break;
+    case ExpenseSort.dateOldest:
+      list.sort((a, b) => a.expenseDate.compareTo(b.expenseDate));
+      break;
+    case null:
+      break;
+  }
+
+  return list;
 }

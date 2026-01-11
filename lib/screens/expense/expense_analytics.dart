@@ -23,7 +23,7 @@ class ExpenseAnalyticsScreen extends StatefulWidget {
 
 class _ExpenseAnalyticsScreenState extends State<ExpenseAnalyticsScreen> {
   double _totalSpent = 0;
-
+  int _spentDays = 0;
   List<DailyExpenseSummary>? _dailyData;
 
   @override
@@ -33,10 +33,17 @@ class _ExpenseAnalyticsScreenState extends State<ExpenseAnalyticsScreen> {
   }
 
   Future<void> _load() async {
-    _dailyData = _buildDailySummary(widget.tour, widget.expenses);
-
+    final days = _buildDailySummary(widget.tour, widget.expenses);
+    int spentDays = 0;
+    for (final day in days) {
+      if (day.items.isNotEmpty) {
+        spentDays++;
+      }
+    }
     setState(() {
       _totalSpent = widget.expenses.fold<double>(0, (sum, e) => sum + e.amount);
+      _spentDays = spentDays;
+      _dailyData = days;
     });
   }
 
@@ -65,9 +72,9 @@ class _ExpenseAnalyticsScreenState extends State<ExpenseAnalyticsScreen> {
           children: [
             // -------- Budget Snapshot Hero --------
             BudgetSnapshotCard(
-              budget: widget.tour.budget,
+              tour: widget.tour,
               spent: _totalSpent,
-              totalDays: widget.tour.totalDays,
+              spentDays: _spentDays,
               onEditBudget: _openBudgetSheet,
             ),
             const SizedBox(height: 16),
@@ -83,7 +90,10 @@ class _ExpenseAnalyticsScreenState extends State<ExpenseAnalyticsScreen> {
 
             // -------- Category Donut (next) --------
             const SizedBox(height: 16),
-            ExpenseCategoryPie(expenses: widget.expenses),
+            ExpenseCategoryPie(
+              expenses: widget.expenses,
+              totalSpent: _totalSpent,
+            ),
 
             // const SizedBox(height: 16),
 

@@ -22,7 +22,7 @@ class _ExpenseUpsertSheetState extends State<ExpenseUpsertSheet> {
   late final TextEditingController _amountCtrl;
   final FocusNode _titleFocus = FocusNode();
 
-  String _category = 'General';
+  String _category = 'Other';
   DateTime _expenseDate = DateTime.now();
 
   bool get isEdit => widget.existing != null;
@@ -228,7 +228,7 @@ class _ExpenseUpsertSheetState extends State<ExpenseUpsertSheet> {
       context: context,
       initialDate: _expenseDate,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 1)),
+      lastDate: DateTime.now(),
     );
 
     if (picked != null) {

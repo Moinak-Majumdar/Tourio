@@ -57,7 +57,13 @@ class _UpsertTourScreenState extends State<UpsertTourScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.isEdit ? 'Edit Tour' : 'Create Tour')),
+      appBar: AppBar(
+        title: Text(widget.isEdit ? 'Edit Tour' : 'Create Tour'),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: scheme.surface,
+      ),
+
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _saveTour,
         icon: const Icon(LucideIcons.check),
@@ -96,6 +102,12 @@ class _UpsertTourScreenState extends State<UpsertTourScreen> {
                 keyboardType: TextInputType.number,
                 'Budget',
                 onChanged: (_) => setState(() {}),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return '';
+                  }
+                  return null;
+                },
               ),
 
               const SizedBox(height: 24),

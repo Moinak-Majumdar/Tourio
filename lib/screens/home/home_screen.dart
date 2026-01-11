@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tourio/common/controllers/tour_controller.dart';
+import 'package:tourio/common/theme/glass_card.dart';
 import 'package:tourio/screens/home/widgets/home_drawer.dart';
 import 'package:tourio/screens/home/widgets/ongoing_tour_dialog.dart';
 import 'package:tourio/screens/home/widgets/tour_list.dart';
 import 'package:tourio/screens/tour/upsert_tour.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _key = GlobalKey<ExpandableFabState>();
 
   @override
   Widget build(BuildContext context) {
@@ -21,25 +30,41 @@ class HomeScreen extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
-        actions: [
-          IconButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => const OngoingTourDialog(),
-              );
-            },
-            icon: Icon(LucideIcons.badgeInfo, color: scheme.secondary),
-          ),
-        ],
       ),
       drawer: const HomeDrawer(),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Get.to(() => const UpsertTourScreen());
-        },
-        icon: const Icon(LucideIcons.plus),
-        label: const Text('Create Tour'),
+      floatingActionButtonLocation: ExpandableFab.location,
+      floatingActionButton: ExpandableFab(
+        key: _key,
+        overlayStyle: ExpandableFabOverlayStyle(blur: 4),
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'create_tour',
+            onPressed: () {
+              final state = _key.currentState;
+              if (state != null) {
+                state.close();
+                Get.to(() => const UpsertTourScreen());
+              }
+            },
+            icon: const Icon(LucideIcons.plus),
+            label: const Text('Create Tour'),
+          ),
+          FloatingActionButton.extended(
+            heroTag: 'ongoing_tour',
+            onPressed: () {
+              final state = _key.currentState;
+              if (state != null) {
+                showDialog(
+                  context: context,
+                  builder: (context) => const OngoingTourDialog(),
+                );
+                state.close();
+              }
+            },
+            icon: const Icon(LucideIcons.mapPin),
+            label: const Text('Ongoing Tour'),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -116,19 +141,14 @@ class HomeScreen extends StatelessWidget {
     required String title,
     required String value,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+    return GlassCard(
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.08),
+          blurRadius: 16,
+          offset: const Offset(0, 8),
+        ),
+      ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
