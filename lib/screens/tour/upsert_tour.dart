@@ -3,12 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tourio/common/controllers/tour_controller.dart';
 import 'package:tourio/db/tour_db.dart';
 import 'package:tourio/helper/move_img.dart';
 import 'package:tourio/models/tour_model.dart';
+import 'package:tourio/screens/tour/widget/date_card.dart';
 
 class UpsertTourScreen extends StatefulWidget {
   final int? tourId;
@@ -52,6 +52,11 @@ class _UpsertTourScreenState extends State<UpsertTourScreen> {
     return _endDate!.difference(_startDate!).inDays + 1;
   }
 
+  DateTimeRange? get _dateRange {
+    if (_startDate == null || _endDate == null) return null;
+    return DateTimeRange(start: _startDate!, end: _endDate!);
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -80,7 +85,7 @@ class _UpsertTourScreenState extends State<UpsertTourScreen> {
               const SizedBox(height: 20),
 
               const SizedBox(height: 24),
-              _section('Tour Details'),
+              _heading('Tour Details'),
               _input(
                 _destinationCtrl,
                 'Destination',
@@ -110,58 +115,34 @@ class _UpsertTourScreenState extends State<UpsertTourScreen> {
                 },
               ),
 
-              const SizedBox(height: 24),
-              _section('Dates'),
-              Column(
+              const SizedBox(height: 8),
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _dateButton(
-                          label: 'Start date',
-                          date: _startDate,
-                          onSelect: (d) {
-                            setState(() {
-                              _startDate = d;
-                              _startDateError = false;
-                            });
-                          },
-                          hasError: _startDateError,
-                        ),
+                  _heading('Travel Dates'),
+                  const SizedBox(width: 18),
+                  if (totalDays > 0)
+                    Text(
+                      'Pack your bag for $totalDays days',
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(width: 12),
-                      if (_startDate != null) ...[
-                        Expanded(
-                          child: _dateButton(
-                            label: 'End date',
-                            date: _endDate,
-                            onSelect: (d) {
-                              setState(() {
-                                _endDate = d;
-                                _endDateError = false;
-                              });
-                            },
-                            firstDate: _startDate,
-                            hasError: _endDateError,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                    ),
                 ],
               ),
-
-              if (totalDays > 0) ...[
-                const SizedBox(height: 18),
-                Text(
-                  'Pack your bag for $totalDays days',
-                  style: TextStyle(
-                    color: scheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+              DateRangeCard(
+                range: _dateRange,
+                hasError: _startDateError || _endDateError,
+                onSelect: (range) {
+                  setState(() {
+                    _startDate = range.start;
+                    _endDate = range.end;
+                    _startDateError = false;
+                    _endDateError = false;
+                  });
+                },
+              ),
             ],
           ),
         ),
@@ -179,6 +160,7 @@ class _UpsertTourScreenState extends State<UpsertTourScreen> {
         width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
+
           color: scheme.surfaceContainerHighest,
           image: _coverImage != null
               ? DecorationImage(
@@ -256,13 +238,10 @@ class _UpsertTourScreenState extends State<UpsertTourScreen> {
     );
   }
 
-  Widget _section(String title) {
+  Widget _heading(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-      ),
+      child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
     );
   }
 
@@ -273,51 +252,18 @@ class _UpsertTourScreenState extends State<UpsertTourScreen> {
     String? Function(String?)? validator,
     TextInputType? keyboardType,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextFormField(
-        controller: ctrl,
-        keyboardType: keyboardType,
-        onChanged: onChanged,
-        validator: validator,
-        textCapitalization: TextCapitalization.sentences,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-        ),
+    return TextFormField(
+      controller: ctrl,
+      keyboardType: keyboardType,
+      onChanged: onChanged,
+      validator: validator,
+      textCapitalization: TextCapitalization.sentences,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        helperText: '',
+        errorMaxLines: 1,
       ),
-    );
-  }
-
-  Widget _dateButton({
-    required String label,
-    DateTime? date,
-    required Function(DateTime) onSelect,
-    DateTime? firstDate,
-    DateTime? lastDate,
-    bool hasError = false,
-  }) {
-    final scheme = Theme.of(context).colorScheme;
-    final borderColor = hasError ? scheme.error : scheme.outline;
-
-    return OutlinedButton.icon(
-      style: OutlinedButton.styleFrom(
-        side: BorderSide(color: borderColor),
-        foregroundColor: hasError ? scheme.error : null,
-      ),
-      icon: const Icon(LucideIcons.calendar),
-      label: Text(
-        date == null ? label : DateFormat('dd MMM yyyy').format(date),
-      ),
-      onPressed: () async {
-        final picked = await showDatePicker(
-          context: context,
-          firstDate: firstDate ?? DateTime(2020),
-          lastDate: lastDate ?? DateTime(2035),
-          initialDate: date ?? firstDate ?? DateTime.now(),
-        );
-        if (picked != null) onSelect(picked);
-      },
     );
   }
 

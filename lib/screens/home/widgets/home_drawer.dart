@@ -29,11 +29,6 @@ class HomeDrawer extends StatelessWidget {
 
               _drawerSection('Main'),
               _drawerItem(
-                icon: LucideIcons.home,
-                title: 'Home',
-                onTap: () => Get.back(),
-              ),
-              _drawerItem(
                 icon: LucideIcons.plusCircle,
                 title: 'Create Tour',
                 onTap: () => Get.to(() => const UpsertTourScreen()),

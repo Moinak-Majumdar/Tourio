@@ -3,13 +3,21 @@ import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tourio/db/expense_db.dart';
 import 'package:tourio/models/expense_model.dart';
+import 'package:tourio/models/taveler_model.dart';
+import 'package:tourio/models/tour_model.dart';
 import 'package:tourio/screens/expense/widget/category_config.dart';
 
 class ExpenseUpsertSheet extends StatefulWidget {
-  final int tourId;
+  final TourModel tour;
   final ExpenseModel? existing;
+  final List<TavelerModel> travelers;
 
-  const ExpenseUpsertSheet({super.key, required this.tourId, this.existing});
+  const ExpenseUpsertSheet({
+    super.key,
+    required this.tour,
+    required this.travelers,
+    this.existing,
+  });
 
   @override
   State<ExpenseUpsertSheet> createState() => _ExpenseUpsertSheetState();
@@ -20,6 +28,8 @@ class _ExpenseUpsertSheetState extends State<ExpenseUpsertSheet> {
 
   late final TextEditingController _titleCtrl;
   late final TextEditingController _amountCtrl;
+  late final TextEditingController _travelerNameCtrl;
+  late TavelerModel _selectedTraveler;
   final FocusNode _titleFocus = FocusNode();
 
   String _category = 'Other';
@@ -32,6 +42,7 @@ class _ExpenseUpsertSheetState extends State<ExpenseUpsertSheet> {
     super.initState();
 
     _titleCtrl = TextEditingController(text: widget.existing?.title);
+    _travelerNameCtrl = TextEditingController();
     _amountCtrl = TextEditingController(
       text: widget.existing?.amount.toStringAsFixed(0),
     );
@@ -39,12 +50,26 @@ class _ExpenseUpsertSheetState extends State<ExpenseUpsertSheet> {
     if (widget.existing != null) {
       _category = widget.existing!.category;
       _expenseDate = widget.existing!.expenseDate;
+      _selectedTraveler = widget.travelers.firstWhere(
+        (t) => t.id == widget.existing!.paidBy,
+      );
+    } else {
+      _selectedTraveler = widget.travelers.firstWhere((t) => t.isSelf == true);
     }
 
     // 🔑 Autofocus fix for modal
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _titleFocus.requestFocus();
     });
+
+    final now = DateTime.now();
+    if (now.isBefore(widget.tour.startDate)) {
+      _expenseDate = widget.tour.startDate;
+    } else if (now.isAfter(widget.tour.endDate)) {
+      _expenseDate = widget.tour.endDate;
+    } else {
+      _expenseDate = now;
+    }
   }
 
   @override
@@ -175,26 +200,36 @@ class _ExpenseUpsertSheetState extends State<ExpenseUpsertSheet> {
                   const SizedBox(height: 16),
 
                   // -------- Category --------
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 0,
-                    children: expenseCategoryList.map((c) {
-                      final selected = c == _category;
-                      return ChoiceChip(
-                        label: Text(c),
-                        selected: selected,
-                        onSelected: (_) => setState(() => _category = c),
-                        selectedColor: scheme.primaryContainer,
-                        backgroundColor: scheme.surfaceContainerLow,
-                        labelStyle: TextStyle(
-                          color: selected
-                              ? scheme.onPrimaryContainer
-                              : scheme.onSurface,
-                        ),
-                      );
-                    }).toList(),
+                  SizedBox(
+                    height: 40,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: expenseCategoryList.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, i) {
+                        final c = expenseCategoryList[i];
+                        final selected = c == _category;
+
+                        return ChoiceChip(
+                          label: Text(c),
+                          selected: selected,
+                          onSelected: (_) => setState(() => _category = c),
+                          selectedColor: scheme.primaryContainer,
+                          backgroundColor: scheme.surfaceContainerLow,
+                          labelStyle: TextStyle(
+                            color: selected
+                                ? scheme.onPrimaryContainer
+                                : scheme.onSurface,
+                          ),
+                        );
+                      },
+                    ),
                   ),
 
+                  const SizedBox(height: 16),
+                  _travelerSelector(scheme),
+
+                  // select payer
                   const SizedBox(height: 24),
 
                   // -------- Action --------
@@ -221,14 +256,101 @@ class _ExpenseUpsertSheetState extends State<ExpenseUpsertSheet> {
     );
   }
 
+  // traveler selector
+
+  Widget _travelerSelector(ColorScheme scheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Paid by', style: TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: widget.travelers.map((t) {
+              final selected = t.id == _selectedTraveler.id;
+
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  selected: selected,
+                  onSelected: (_) {
+                    setState(() {
+                      _selectedTraveler = t;
+                      _travelerNameCtrl.clear();
+                    });
+                  },
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(t.name),
+                      if (t.isSelf) ...[
+                        const SizedBox(width: 6),
+                        const Icon(
+                          LucideIcons.crown,
+                          size: 16,
+                          color: Colors.amber,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _travelerNameCtrl,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            hintText: 'Or new person ...',
+            filled: true,
+            fillColor: scheme.surfaceContainerLow,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          onChanged: _createTraveler,
+        ),
+      ],
+    );
+  }
+
+  void _createTraveler(String val) {
+    final name = val.trim();
+    if (name.isEmpty) return;
+
+    final exists = widget.travelers.any(
+      (t) => t.name.toLowerCase() == name.toLowerCase(),
+    );
+
+    TavelerModel t;
+
+    if (exists) {
+      t = widget.travelers.firstWhere(
+        (t) => t.name.toLowerCase() == name.toLowerCase(),
+      );
+    } else {
+      t = TavelerModel(tourId: widget.tour.id!, isSelf: false, name: name);
+    }
+
+    setState(() {
+      _selectedTraveler = t;
+    });
+  }
+
   // ---------------- Date Picker ----------------
 
   Future<void> _pickDate() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+
     final picked = await showDatePicker(
       context: context,
       initialDate: _expenseDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
+      firstDate: widget.tour.startDate,
+      lastDate: widget.tour.endDate,
     );
 
     if (picked != null) {
@@ -243,14 +365,14 @@ class _ExpenseUpsertSheetState extends State<ExpenseUpsertSheet> {
 
     final expense = ExpenseModel(
       id: widget.existing?.id,
-      tourId: widget.tourId,
+      tourId: widget.tour.id!,
       title: _titleCtrl.text.trim(),
       amount: double.parse(_amountCtrl.text.trim()),
       category: _category,
       expenseDate: _expenseDate,
     );
 
-    await ExpenseDb.upsert(expense);
+    await ExpenseDb.upsert(expense, _selectedTraveler);
 
     Navigator.pop(context, true);
   }

@@ -10,6 +10,10 @@ class ExpenseOverview extends StatelessWidget {
   double get remaining => (limit - used).clamp(0, limit);
   double get percent => (used / limit).clamp(0, 1);
 
+  Color get color => used > limit
+      ? Color(0xFFf12711)
+      : (used > (limit * 0.9) ? Color(0xFFF5af19) : Color(0xFF2AFF57));
+
   @override
   Widget build(BuildContext context) {
     return GlassCard(
@@ -80,7 +84,7 @@ class ExpenseOverview extends StatelessWidget {
               borderRadius: BorderRadius.circular(99),
               minHeight: 12,
               backgroundColor: Colors.white10,
-              valueColor: const AlwaysStoppedAnimation(Color(0xFF2AFF57)),
+              valueColor: AlwaysStoppedAnimation(color),
             ),
           ),
         ],

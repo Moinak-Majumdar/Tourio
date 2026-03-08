@@ -5,6 +5,7 @@ import 'package:tourio/models/tour_model.dart';
 
 class TourController extends GetxController {
   final RxList<TourModel> tours = <TourModel>[].obs;
+
   final RxDouble expenseCount = 0.0.obs;
   final RxInt tourCount = 0.obs;
 
@@ -23,11 +24,15 @@ class TourController extends GetxController {
   // ---------------- Tours ----------------
 
   Future<void> _loadTours() async {
-    final res = await Future.wait([TourDb.getAllTours()]);
+    final res = await TourDb.getAllTours();
 
-    tours.assignAll(res[0]);
+    tours.assignAll(res);
     expenseCount.value = 0.0;
-    tourCount.value = res[0].length;
+    tourCount.value = res.length;
+
+    if ((ongoingTourId.value == 0) && res.isNotEmpty) {
+      setOngoing(res[0].id!);
+    }
   }
 
   Future<void> refreshTours() async {

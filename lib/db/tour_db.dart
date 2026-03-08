@@ -1,4 +1,6 @@
 import 'package:sqflite/sqflite.dart';
+import 'package:tourio/db/traveler_db.dart';
+import 'package:tourio/models/taveler_model.dart';
 import 'package:tourio/models/tour_model.dart';
 
 import 'db_helper.dart';
@@ -19,7 +21,14 @@ class TourDb {
         'last_updated_at': now,
       };
 
-      return await db.insert(table, data);
+      final tourId = await db.insert(table, data);
+
+      // create self traveler
+      await TravelerDb.upsertTraveler(
+        TavelerModel(tourId: tourId, isSelf: true, name: 'You'),
+      );
+
+      return tourId;
     } else {
       final data = {...model.toMap(), 'last_updated_at': now};
 

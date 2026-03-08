@@ -6,6 +6,7 @@ import 'package:tourio/screens/checklist/checklist_screen.dart';
 import 'package:tourio/screens/expense/expense_screen.dart';
 import 'package:tourio/screens/home/widgets/tour_card.dart';
 import 'package:tourio/screens/itinerary/itinerary_view_screen.dart';
+import 'package:tourio/screens/notes/notes_list.dart';
 import 'package:tourio/screens/tour/upsert_tour.dart';
 
 class TourList extends StatelessWidget {
@@ -38,6 +39,7 @@ class TourList extends StatelessWidget {
             onItinerary: () => Get.to(() => ItineraryViewScreen(tour: tour)),
             onNotes: () {
               // Navigate to notes page with tourId
+              Get.to(() => NotesListScreen(tour: tour));
             },
             onChecklist: () {
               // Navigate to checklist page with tourId

@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:tourio/common/controllers/tour_controller.dart';
@@ -27,6 +29,12 @@ class TourioApp extends StatelessWidget {
 
     return Obx(() {
       return GetMaterialApp(
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          FlutterQuillLocalizations.delegate,
+        ],
         debugShowCheckedModeBanner: false,
         title: 'Tourio',
         theme: themeController.isDark.value ? AppTheme.dark : AppTheme.light,

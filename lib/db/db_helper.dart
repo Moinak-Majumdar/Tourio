@@ -22,6 +22,7 @@ class DatabaseHelper {
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute(_createToursTable);
+    await db.execute(_createTravelersTable);
     await db.execute(_createItineraryTable);
     await db.execute(_createExpensesTable);
     await db.execute(_createNotesTable);
@@ -74,10 +75,12 @@ class DatabaseHelper {
     amount REAL NOT NULL,
     expense_date TEXT NOT NULL,
     category TEXT NOT NULL,
+    paid_by INTEGER NOT NULL,
     is_deleted INTEGER DEFAULT 0,
     created_at TEXT NOT NULL,
     last_updated_at TEXT NOT NULL,
-    FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE
+    FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE,
+    FOREIGN KEY (paid_by) REFERENCES travelers(id) ON DELETE CASCADE
   );
   ''';
 
@@ -106,4 +109,17 @@ class DatabaseHelper {
     FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE
   );
   ''';
+
+  static const String _createTravelersTable = '''
+    CREATE TABLE travelers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tour_id INTEGER NOT NULL,
+      is_self INTEGER DEFAULT 0,
+      name TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      last_updated_at TEXT NOT NULL,
+      is_deleted INTEGER DEFAULT 0,
+      FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE
+    );
+    ''';
 }

@@ -81,7 +81,7 @@ class _ExpenseAnalyticsScreenState extends State<ExpenseAnalyticsScreen> {
 
             DailySnapshotCard(summaries: _dailyData!, tour: widget.tour),
 
-            // -------- Timeline (next) --------
+            // -------- line chart (next) --------
             const SizedBox(height: 16),
             DayWiseSnapshot(
               data: _dailyData!,
@@ -94,18 +94,6 @@ class _ExpenseAnalyticsScreenState extends State<ExpenseAnalyticsScreen> {
               expenses: widget.expenses,
               totalSpent: _totalSpent,
             ),
-
-            // const SizedBox(height: 16),
-
-            // -------- Insights (next) --------
-
-            // _sectionTitle('Insights'),
-            // const SizedBox(height: 12),
-            // _placeholderCard(
-            //   scheme,
-            //   icon: LucideIcons.lightbulb,
-            //   text: 'Smart insights go here',
-            // ),
           ],
         ),
       ),

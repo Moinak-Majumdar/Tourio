@@ -120,7 +120,8 @@ class _DayWiseSnapshotState extends State<DayWiseSnapshot> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Container(
-              width: MediaQuery.of(context).size.width,
+              height: 250,
+              width: (45 * widget.data.length).toDouble(),
               padding: EdgeInsets.fromLTRB(0, 8, 8, 0),
               child: AspectRatio(
                 aspectRatio: 16 / 9,
@@ -130,6 +131,7 @@ class _DayWiseSnapshotState extends State<DayWiseSnapshot> {
                       LineChartData(
                         lineTouchData: LineTouchData(
                           enabled: true,
+
                           handleBuiltInTouches: false,
                           touchCallback:
                               (

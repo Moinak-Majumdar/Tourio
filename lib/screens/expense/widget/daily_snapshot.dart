@@ -56,7 +56,7 @@ class _DailySnapshotCardState extends State<DailySnapshotCard> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
+        color: scheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(28),
       ),
       child: Column(
@@ -115,8 +115,8 @@ class _DailySnapshotCardState extends State<DailySnapshotCard> {
                         const SizedBox(width: 6),
                         Text(
                           diffFromLastDay >= 0
-                              ? '+ ₹${diffFromLastDay.toStringAsFixed(0)} vs yesterday'
-                              : '- ₹${diffFromLastDay.abs().toStringAsFixed(0)} vs yesterday',
+                              ? ' ₹${diffFromLastDay.toStringAsFixed(0)} vs yesterday'
+                              : ' ₹${diffFromLastDay.abs().toStringAsFixed(0)} vs yesterday',
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: diffFromLastDay >= 0
@@ -169,7 +169,7 @@ class _DailySnapshotCardState extends State<DailySnapshotCard> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Most spent: ${mostExpensive.title}  - ₹${mostExpensive.amount.toStringAsFixed(0)}',
+                      'Most spent: ${mostExpensive.title} : ₹${mostExpensive.amount.toStringAsFixed(0)}',
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -277,7 +277,7 @@ class _DailySpendStatus extends StatelessWidget {
     final status = _resolveStatus(scheme);
 
     return SizedBox(
-      width: 150,
+      width: 200,
       child: Row(
         children: [
           Icon(status.icon, size: 30, color: status.color),
