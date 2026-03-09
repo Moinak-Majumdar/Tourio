@@ -6,6 +6,7 @@ class TavelerModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final bool isDeleted;
+  final double totalSpend;
 
   TavelerModel({
     this.id,
@@ -15,6 +16,7 @@ class TavelerModel {
     this.createdAt,
     this.updatedAt,
     this.isDeleted = false,
+    this.totalSpend = 0.0,
   });
 
   // ---------------- From DB ----------------
@@ -27,6 +29,7 @@ class TavelerModel {
       createdAt: DateTime.parse(map['created_at']),
       updatedAt: DateTime.parse(map['last_updated_at']),
       isDeleted: (map['is_deleted'] ?? 0) == 1,
+      totalSpend: map['total_spend'] ?? 0.0,
     );
   }
 

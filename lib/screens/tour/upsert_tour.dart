@@ -8,6 +8,7 @@ import 'package:tourio/common/controllers/tour_controller.dart';
 import 'package:tourio/db/tour_db.dart';
 import 'package:tourio/helper/move_img.dart';
 import 'package:tourio/models/tour_model.dart';
+import 'package:tourio/screens/tour/tour_travelers.dart';
 import 'package:tourio/screens/tour/widget/date_card.dart';
 
 class UpsertTourScreen extends StatefulWidget {
@@ -25,6 +26,7 @@ class _UpsertTourScreenState extends State<UpsertTourScreen> {
   final _nameCtrl = TextEditingController();
   final _destinationCtrl = TextEditingController();
   final _budgetCtrl = TextEditingController();
+  TourModel? _tour;
 
   @override
   void initState() {
@@ -67,6 +69,15 @@ class _UpsertTourScreenState extends State<UpsertTourScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: scheme.surface,
+        actions: [
+          if (widget.isEdit)
+            IconButton(
+              onPressed: () {
+                Get.to(() => TourTravelers(tour: _tour!));
+              },
+              icon: Icon(LucideIcons.user),
+            ),
+        ],
       ),
 
       floatingActionButton: FloatingActionButton.extended(
@@ -283,6 +294,7 @@ class _UpsertTourScreenState extends State<UpsertTourScreen> {
     // print(tour.toMap());
 
     setState(() {
+      _tour = tour;
       _nameCtrl.text = tour.name ?? '';
       _destinationCtrl.text = tour.destination;
       _startDate = tour.startDate;

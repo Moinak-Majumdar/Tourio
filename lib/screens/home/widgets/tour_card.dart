@@ -109,6 +109,21 @@ class TourCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
 
+          // -------- Traveler Count Row --------
+          if (tour.travelerCount != 0) ...[
+            Row(
+              children: [
+                const Icon(LucideIcons.user, size: 14, color: Colors.white70),
+                const SizedBox(width: 6),
+                Text(
+                  '${tour.travelerCount} ${tour.travelerCount == 1 ? 'person' : 'peoples'}',
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+          ],
+
           // -------- Date Row --------
           Row(
             children: [

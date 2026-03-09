@@ -9,6 +9,7 @@ class TourModel {
   final String? coverImagePath;
   final DateTime? createdAt;
   final DateTime? lastUpdatedAt;
+  final int travelerCount;
 
   TourModel({
     this.id,
@@ -21,6 +22,7 @@ class TourModel {
     this.coverImagePath,
     this.createdAt,
     this.lastUpdatedAt,
+    this.travelerCount = 0,
   });
 
   String get tourName => name?.isNotEmpty == true ? name! : destination;
@@ -37,6 +39,7 @@ class TourModel {
       createdAt: DateTime.parse(map['created_at']),
       lastUpdatedAt: DateTime.parse(map['last_updated_at']),
       budget: map['budget'],
+      travelerCount: map['traveler_count'] ?? 0,
     );
   }
 

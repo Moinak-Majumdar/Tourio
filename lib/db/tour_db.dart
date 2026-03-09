@@ -54,11 +54,15 @@ class TourDb {
   static Future<TourModel?> getTourById(int tourId) async {
     final db = await DatabaseHelper.instance.database;
 
-    final res = await db.query(
-      table,
-      where: 'id = ?',
-      whereArgs: [tourId],
-      limit: 1,
+    final res = await db.rawQuery(
+      '''
+      SELECT t.*, COUNT(tr.id) as traveler_count 
+      FROM $table t
+      LEFT JOIN travelers tr ON t.id = tr.tour_id AND tr.is_deleted = 0
+      WHERE t.id = ? AND t.is_deleted = 0
+      GROUP BY t.id
+      ''',
+      [tourId],
     );
 
     if (res.isEmpty) return null;
@@ -70,11 +74,13 @@ class TourDb {
   static Future<List<TourModel>> getAllTours() async {
     final db = await DatabaseHelper.instance.database;
 
-    final res = await db.query(
-      table,
-      orderBy: 'last_updated_at DESC',
-      where: 'is_deleted = 0',
-    );
+    final res = await db.rawQuery('''
+      SELECT t.*, COUNT(tr.id) as traveler_count 
+      FROM $table t
+      LEFT JOIN travelers tr ON t.id = tr.tour_id AND tr.is_deleted = 0
+      WHERE t.is_deleted = 0
+      GROUP BY t.id
+      ORDER BY t.last_updated_at DESC''');
 
     return res.map(TourModel.fromMap).toList();
   }
