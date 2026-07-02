@@ -10,6 +10,7 @@ class ExpenseModel {
 
   final bool isDeleted;
   final int? paidBy;
+  final String? paidByName;
 
   final DateTime? createdAt;
   final DateTime? lastUpdatedAt;
@@ -23,6 +24,7 @@ class ExpenseModel {
     required this.category,
     this.isDeleted = false,
     this.paidBy,
+    this.paidByName,
     this.createdAt,
     this.lastUpdatedAt,
   });
@@ -38,6 +40,7 @@ class ExpenseModel {
       category: map['category'] as String,
       isDeleted: (map['is_deleted'] ?? 0) == 1,
       paidBy: map['paid_by'] as int?,
+      paidByName: map['paid_by_name'] as String?,
       createdAt: DateTime.parse(map['created_at']),
       lastUpdatedAt: DateTime.parse(map['last_updated_at']),
     );

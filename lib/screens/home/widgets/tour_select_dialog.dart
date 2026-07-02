@@ -5,8 +5,9 @@ import 'package:tourio/common/controllers/tour_controller.dart';
 import 'package:tourio/models/tour_model.dart';
 import 'package:tourio/screens/checklist/checklist_screen.dart';
 import 'package:tourio/screens/itinerary/itinerary_view_screen.dart';
+import 'package:tourio/screens/trash/trash_screen.dart';
 
-enum TourAction { itinerary, notes, expenses, checklist }
+enum TourAction { itinerary, notes, expenses, checklist, trash }
 
 class TourSelectDialog {
   static Future<void> open(
@@ -186,6 +187,10 @@ class _TourSelectDialogContentState extends State<_TourSelectDialogContent> {
 
       case TourAction.checklist:
         Get.to(() => ChecklistScreen(tour: _selectedTour!));
+        break;
+
+      case TourAction.trash:
+        Get.to(() => TrashScreen(tour: _selectedTour!));
         break;
 
       case TourAction.notes:

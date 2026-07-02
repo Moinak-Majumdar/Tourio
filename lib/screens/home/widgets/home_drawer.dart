@@ -8,6 +8,7 @@ import 'package:tourio/screens/home/widgets/tour_select_dialog.dart';
 import 'package:tourio/screens/itinerary/itinerary_view_screen.dart';
 import 'package:tourio/screens/settings/settings_screen.dart';
 import 'package:tourio/screens/tour/upsert_tour.dart';
+import 'package:tourio/screens/trash/trash_screen.dart';
 
 class HomeDrawer extends StatelessWidget {
   const HomeDrawer({super.key});
@@ -65,14 +66,14 @@ class HomeDrawer extends StatelessWidget {
                     }
                   },
                 ),
-                _drawerItem(
-                  icon: Icons.event_note_outlined,
-                  title: 'Notes',
-                  size: 22,
-                  onTap: () => {
-                    TourSelectDialog.open(context, action: TourAction.notes),
-                  },
-                ),
+                // _drawerItem(
+                //   icon: Icons.event_note_outlined,
+                //   title: 'Notes',
+                //   size: 22,
+                //   onTap: () => {
+                //     TourSelectDialog.open(context, action: TourAction.notes),
+                //   },
+                // ),
                 _drawerItem(
                   icon: LucideIcons.wallet2,
                   title: 'Expenses',
@@ -94,7 +95,14 @@ class HomeDrawer extends StatelessWidget {
               _drawerItem(
                 icon: LucideIcons.trash,
                 title: 'Trash',
-                onTap: () => {},
+                onTap: () {
+                  final ot = tc.ongoingTour;
+                  if (ot != null) {
+                    Get.to(() => TrashScreen(tour: ot));
+                  } else {
+                    TourSelectDialog.open(context, action: TourAction.trash);
+                  }
+                },
               ),
               _drawerItem(
                 icon: LucideIcons.settings,

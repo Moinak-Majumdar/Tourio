@@ -49,11 +49,16 @@ class ExpenseDb {
   }) async {
     final db = await DatabaseHelper.instance.database;
 
-    final res = await db.query(
-      table,
-      where: includeDeleted ? 'tour_id = ?' : 'tour_id = ? AND is_deleted = 0',
-      whereArgs: [tourId],
-      orderBy: 'expense_date DESC, created_at DESC',
+    final res = await db.rawQuery(
+      '''
+      SELECT e.*, t.name AS paid_by_name
+      FROM $table e
+      LEFT JOIN travelers t ON t.id = e.paid_by
+      WHERE e.tour_id = ?
+        ${includeDeleted ? '' : 'AND e.is_deleted = 0'}
+      ORDER BY e.expense_date DESC, e.created_at DESC
+      ''',
+      [tourId],
     );
 
     return res.map(ExpenseModel.fromMap).toList();

@@ -50,26 +50,19 @@ class _ExpenseUpsertSheetState extends State<ExpenseUpsertSheet> {
     if (widget.existing != null) {
       _category = widget.existing!.category;
       _expenseDate = widget.existing!.expenseDate;
+      // print('expense date: $_expenseDate');
       _selectedTraveler = widget.travelers.firstWhere(
         (t) => t.id == widget.existing!.paidBy,
       );
     } else {
       _selectedTraveler = widget.travelers.firstWhere((t) => t.isSelf == true);
+      _expenseDate = _defaultExpenseDate();
     }
 
     // 🔑 Autofocus fix for modal
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _titleFocus.requestFocus();
     });
-
-    final now = DateTime.now();
-    if (now.isBefore(widget.tour.startDate)) {
-      _expenseDate = widget.tour.startDate;
-    } else if (now.isAfter(widget.tour.endDate)) {
-      _expenseDate = widget.tour.endDate;
-    } else {
-      _expenseDate = now;
-    }
   }
 
   @override
@@ -205,7 +198,8 @@ class _ExpenseUpsertSheetState extends State<ExpenseUpsertSheet> {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: expenseCategoryList.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(width: 8),
                       itemBuilder: (context, i) {
                         final c = expenseCategoryList[i];
                         final selected = c == _category;
@@ -343,6 +337,17 @@ class _ExpenseUpsertSheetState extends State<ExpenseUpsertSheet> {
 
   // ---------------- Date Picker ----------------
 
+  DateTime _defaultExpenseDate() {
+    final now = DateTime.now();
+    if (now.isBefore(widget.tour.startDate)) {
+      return widget.tour.startDate;
+    }
+    if (now.isAfter(widget.tour.endDate)) {
+      return widget.tour.endDate;
+    }
+    return now;
+  }
+
   Future<void> _pickDate() async {
     FocusManager.instance.primaryFocus?.unfocus();
 
@@ -374,6 +379,7 @@ class _ExpenseUpsertSheetState extends State<ExpenseUpsertSheet> {
 
     await ExpenseDb.upsert(expense, _selectedTraveler);
 
+    if (!mounted) return;
     Navigator.pop(context, true);
   }
 }
